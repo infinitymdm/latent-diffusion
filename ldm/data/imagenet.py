@@ -156,7 +156,7 @@ class ImageNetTrain(ImageNetBase):
 
         self.datadir = os.path.join(self.root, "data")
         self.txt_filelist = os.path.join(self.root, "filelist.txt")
-        self.expected_length = 1281167
+        self.expected_length = 1000 #1281167
         self.random_crop = retrieve(self.config, "ImageNetTrain/random_crop",
                                     default=True)
         if not tdu.is_prepared(self.root):
@@ -185,6 +185,7 @@ class ImageNetTrain(ImageNetBase):
                         tar.extractall(path=subdir)
 
             filelist = glob.glob(os.path.join(datadir, "**", "*.JPEG"))
+            filelist = [filelist[i] for i in range(self.expected_length)] # Truncate to something manageable
             filelist = [os.path.relpath(p, start=datadir) for p in filelist]
             filelist = sorted(filelist)
             filelist = "\n".join(filelist)+"\n"
@@ -221,7 +222,7 @@ class ImageNetValidation(ImageNetBase):
             self.root = os.path.join(cachedir, "autoencoders/data", self.NAME)
         self.datadir = os.path.join(self.root, "data")
         self.txt_filelist = os.path.join(self.root, "filelist.txt")
-        self.expected_length = 50000
+        self.expected_length = 100 #50000
         self.random_crop = retrieve(self.config, "ImageNetValidation/random_crop",
                                     default=False)
         if not tdu.is_prepared(self.root):
@@ -259,6 +260,7 @@ class ImageNetValidation(ImageNetBase):
                     shutil.move(src, dst)
 
             filelist = glob.glob(os.path.join(datadir, "**", "*.JPEG"))
+            filelist = [filelist[i] for i in range(self.expected_length)] # Truncate to something manageable
             filelist = [os.path.relpath(p, start=datadir) for p in filelist]
             filelist = sorted(filelist)
             filelist = "\n".join(filelist)+"\n"
