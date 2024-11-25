@@ -185,7 +185,7 @@ class ImageNetTrain(ImageNetBase):
                         tar.extractall(path=subdir)
 
             filelist = glob.glob(os.path.join(datadir, "**", "*.JPEG"))
-            filelist = [filelist[i] for i in range(self.expected_length)] # Truncate to something manageable
+            filelist = [filelist[i] for i in np.random.randint(0,1281166,self.expected_length)] # Truncate to something manageable
             filelist = [os.path.relpath(p, start=datadir) for p in filelist]
             filelist = sorted(filelist)
             filelist = "\n".join(filelist)+"\n"
@@ -260,7 +260,7 @@ class ImageNetValidation(ImageNetBase):
                     shutil.move(src, dst)
 
             filelist = glob.glob(os.path.join(datadir, "**", "*.JPEG"))
-            filelist = [filelist[i] for i in range(self.expected_length)] # Truncate to something manageable
+            filelist = [filelist[i] for i in np.random.randint(0,49999,self.expected_length)] # Truncate to something manageable
             filelist = [os.path.relpath(p, start=datadir) for p in filelist]
             filelist = sorted(filelist)
             filelist = "\n".join(filelist)+"\n"

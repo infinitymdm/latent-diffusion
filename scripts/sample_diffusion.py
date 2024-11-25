@@ -135,7 +135,46 @@ def run(model, logdir, batch_size=50, vanilla=False, custom_steps=None, eta=None
         np.savez(nppath, all_img)
 
     else:
-       raise NotImplementedError('Currently only sampling for unconditional models supported.')
+        all_images = []
+
+        print(f"Running conditional sampling for {n_samples} samples")
+        classes = list(np.random.randint(0, 1000, n_samples))
+        uc = model.get_learned_conditioning(
+            {model.cond_stage_key: torch.tensor([1000]).to(model.device)}
+        )
+        
+        for label in classes:
+            with model.ema_scope():
+                t0 = time.time()
+                xc = torch.tensor([label])
+                c = model.get_learned_conditioning({model.cond_stage_key: xc.to(model.device)})
+                ddim = DDIMSampler(model)
+                sample, intermediate = ddim.sample(
+                    S=20,
+                    conditioning=c,
+                    batch_size=1,
+                    shape=[3,64,64],
+                    verbose=False,
+                    unconditional_guidance_scale=3.0,
+                    unconditional_conditioning=uc,
+                    eta=eta)
+                t1 = time.time()
+            x_sample = model.decode_first_stage(sample)
+            x_sample = torch.clamp((x_sample+1.0)/2.0, min=0.0, max=1.0)
+            logs = {}
+            logs["sample"] = x_sample
+            logs["time"] = t1 - t0
+            logs["throughput"] = sample.shape[0] / (t1 - t0)
+            print(f'Throughput for this batch: {logs["throughput"]}')
+
+            n_saved = save_logs(logs, logdir, n_saved=n_saved, key="sample")
+            all_images.extend([custom_to_np(logs["sample"])])
+            
+        all_img = np.concatenate(all_images, axis=0)
+        all_img = all_img[:n_samples]
+        shape_str = "x".join([str(x) for x in all_img.shape])
+        nppath = os.path.join(nplog, f"{shape_str}-samples.npz")
+        np.savez(nppath, all_img)
 
     print(f"sampling of {n_saved} images finished in {(time.time() - tstart) / 60.:.2f} minutes.")
 
