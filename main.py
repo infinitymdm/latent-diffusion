@@ -125,8 +125,9 @@ def get_parser(**parser_kwargs):
 
 def nondefault_trainer_args(opt):
     parser = argparse.ArgumentParser()
-    parser = Trainer.add_argparse_args(parser)
+    #parser = Trainer.add_argparse_args(parser)
     args = parser.parse_args([])
+    Trainer(**vars(args))
     return sorted(k for k in vars(args) if getattr(opt, k) != getattr(args, k))
 
 
@@ -384,7 +385,7 @@ class ImageLogger(Callback):
         if not self.disabled and (pl_module.global_step > 0 or self.log_first_step):
             self.log_img(pl_module, batch, batch_idx, split="train")
 
-    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         if not self.disabled and pl_module.global_step > 0:
             self.log_img(pl_module, batch, batch_idx, split="val")
         if hasattr(pl_module, 'calibrate_grad_norm'):
@@ -465,7 +466,8 @@ if __name__ == "__main__":
     sys.path.append(os.getcwd())
 
     parser = get_parser()
-    parser = Trainer.add_argparse_args(parser)
+    #parser = Trainer.add_argparse_args(parser)
+    #parser = Trainer(**var
 
     opt, unknown = parser.parse_known_args()
     if opt.name and opt.resume:
@@ -656,7 +658,8 @@ if __name__ == "__main__":
 
         trainer_kwargs["callbacks"] = [instantiate_from_config(callbacks_cfg[k]) for k in callbacks_cfg]
 
-        trainer = Trainer.from_argparse_args(trainer_opt, **trainer_kwargs)
+        #trainer = Trainer.from_argparse_args(trainer_opt, **trainer_kwargs)
+        trainer = Trainer(**vars(trainer_opt), **trainer_kwargs)
         trainer.logdir = logdir  ###
 
         # data
@@ -721,7 +724,8 @@ if __name__ == "__main__":
                 melk()
                 raise
         if not opt.no_test and not trainer.interrupted:
-            trainer.test(model, data)
+            print(data.dataset_configs["validation"])
+            trainer.validate(model, data)
     except Exception:
         if opt.debug and trainer.global_rank == 0:
             try:
