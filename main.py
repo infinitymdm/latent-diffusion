@@ -2,6 +2,7 @@ import argparse, os, sys, datetime, glob, importlib, csv
 import numpy as np
 import time
 import torch
+torch.set_float32_matmul_precision('medium')  # or 'high'
 import torchvision
 import pytorch_lightning as pl
 
@@ -314,9 +315,9 @@ class ImageLogger(Callback):
             grid = (grid + 1.0) / 2.0  # -1,1 -> 0,1; c,h,w
 
             tag = f"{split}/{k}"
-            pl_module.logger.experiment.add_image(
-                tag, grid,
-                global_step=pl_module.global_step)
+            # pl_module.logger.experiment.add_image(
+            #     tag, grid,
+            #     global_step=pl_module.global_step)
 
     @rank_zero_only
     def log_local(self, save_dir, split, images,
