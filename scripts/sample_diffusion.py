@@ -8,6 +8,7 @@ from omegaconf import OmegaConf
 from PIL import Image
 
 from ldm.models.diffusion.ddim import DDIMSampler
+from ldm.models.diffusion.ddpm import DDPM
 from ldm.util import instantiate_from_config
 
 rescale = lambda x: (x + 1.) / 2.
@@ -148,16 +149,18 @@ def run(model, logdir, batch_size=50, vanilla=False, custom_steps=None, eta=None
                 t0 = time.time()
                 xc = torch.tensor([label])
                 c = model.get_learned_conditioning({model.cond_stage_key: xc.to(model.device)})
-                ddim = DDIMSampler(model)
-                sample, intermediate = ddim.sample(
-                    S=20,
-                    conditioning=c,
-                    batch_size=1,
-                    shape=[3,64,64],
-                    verbose=False,
-                    unconditional_guidance_scale=3.0,
-                    unconditional_conditioning=uc,
-                    eta=eta)
+                #ddim = DDIMSampler(model)
+                # sample, intermediate = ddim.sample(
+                #     S=20,
+                #     conditioning=c,
+                #     batch_size=1,
+                #     shape=[3,64,64],
+                #     verbose=False,
+                #     unconditional_guidance_scale=3.0,
+                #     unconditional_conditioning=uc,
+                #     eta=eta)
+
+                sample = model.sample(cond=c, batch_size=batch_size)
                 t1 = time.time()
             x_sample = model.decode_first_stage(sample)
             x_sample = torch.clamp((x_sample+1.0)/2.0, min=0.0, max=1.0)
