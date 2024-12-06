@@ -8,7 +8,6 @@ from omegaconf import OmegaConf
 from PIL import Image
 
 from ldm.models.diffusion.ddim import DDIMSampler
-from ldm.models.diffusion.ddpm import DDPM
 from ldm.util import instantiate_from_config
 
 rescale = lambda x: (x + 1.) / 2.
@@ -139,9 +138,9 @@ def run(model, logdir, batch_size=50, vanilla=False, custom_steps=None, eta=None
         all_images = []
 
         print(f"Running conditional sampling for {n_samples} samples")
-        classes = list(np.random.randint(0, 1000, n_samples))
+        classes = list(np.random.randint(0, 1001, n_samples))
         uc = model.get_learned_conditioning(
-            {model.cond_stage_key: torch.tensor([1000]).to(model.device)}
+            {model.cond_stage_key: torch.tensor([1001]).to(model.device)}
         )
         
         for label in classes:
@@ -149,18 +148,17 @@ def run(model, logdir, batch_size=50, vanilla=False, custom_steps=None, eta=None
                 t0 = time.time()
                 xc = torch.tensor([label])
                 c = model.get_learned_conditioning({model.cond_stage_key: xc.to(model.device)})
-                #ddim = DDIMSampler(model)
-                # sample, intermediate = ddim.sample(
-                #     S=20,
-                #     conditioning=c,
-                #     batch_size=1,
-                #     shape=[3,64,64],
-                #     verbose=False,
-                #     unconditional_guidance_scale=3.0,
-                #     unconditional_conditioning=uc,
-                #     eta=eta)
-
-                sample = model.sample(cond=c, batch_size=batch_size)
+                ddim = DDIMSampler(model)
+                sample, intermediate = ddim.sample(
+                    S=custom_steps,
+                    conditioning=c,
+                    batch_size=batch_size,
+                    shape=[4,64,64],
+                    verbose=False,
+                    unconditional_guidance_scale=10.0,
+                    unconditional_conditioning=uc,
+                    eta=eta)
+                # sample = model.sample(cond=c, batch_size=batch_size)
                 t1 = time.time()
             x_sample = model.decode_first_stage(sample)
             x_sample = torch.clamp((x_sample+1.0)/2.0, min=0.0, max=1.0)
